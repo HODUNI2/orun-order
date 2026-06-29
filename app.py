@@ -19,7 +19,7 @@ BASE_DATE = "2026-04-30"
 st.title("오런 재고 소진 대시보드")
 st.caption(f"기준날짜: {BASE_DATE}")
 
-df = pd.read_csv("./data/orecast_dashboard.csv")
+df = pd.read_csv("./data/forecast_dashboard.csv")
 
 # 월 컬럼 자동 인식
 month_cols = [
