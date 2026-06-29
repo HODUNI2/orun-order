@@ -1,3 +1,10 @@
+# CD "ORUN\발주 프로그램\pro_app"
+# git add .
+# git commit -m "수정 멘트"
+# git push
+# 수정된거 확인하려면 git status  ->  modified: app.py 뜨면 잘 수정된거
+
+
 import streamlit as st
 import pandas as pd
 
