@@ -402,7 +402,7 @@ with tab2:
             ]
 
             temp["수량표시"] = temp["수량"].round(0).astype(int).astype(str)
-
+            temp["년도"] = temp["년도"].astype(str)
             fig = px.line(
                 temp,
                 x="년도",
@@ -423,7 +423,8 @@ with tab2:
                 xaxis_title="년도",
                 yaxis_title="판매량",
                 hovermode="x unified",
-                legend_title_text="상품명"
+                legend_title_text="상품명",
+                xaxis=dict(type="category")
             )
 
             st.plotly_chart(
