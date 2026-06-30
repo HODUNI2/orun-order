@@ -143,6 +143,7 @@
 
 
 import streamlit as st
+import plotly.express as px
 import pandas as pd
 
 st.set_page_config(
@@ -304,9 +305,10 @@ with tab2:
 
     product_list = sorted(monthly_sales_df["상품명"].dropna().astype(str).unique().tolist())
 
-    selected_product = st.selectbox(
+    selected_products = st.multiselect(
         "상품 선택",
-        product_list
+        product_list,
+        default=product_list[:1]
     )
 
     view_type = st.radio(
@@ -315,64 +317,121 @@ with tab2:
         horizontal=True
     )
 
-    if view_type == "월별":
-
-        temp = monthly_sales_df[
-            monthly_sales_df["상품명"].astype(str) == selected_product
-        ].copy()
-
-        temp = temp.sort_values("년월")
-
-        min_month = temp["년월"].min()
-        max_month = temp["년월"].max()
-
-        start_date, end_date = st.date_input(
-            "조회 기간",
-            value=(min_month.date(), max_month.date()),
-            min_value=min_month.date(),
-            max_value=max_month.date()
-        )
-
-        temp = temp[
-            (temp["년월"] >= pd.to_datetime(start_date)) &
-            (temp["년월"] <= pd.to_datetime(end_date))
-        ]
-
-        st.line_chart(
-            temp.set_index("년월")["수량"]
-        )
-
-        st.dataframe(
-            temp,
-            use_container_width=True
-        )
+    if len(selected_products) == 0:
+        st.warning("상품을 1개 이상 선택하세요.")
 
     else:
 
-        temp = annual_sales_df[
-            annual_sales_df["상품명"].astype(str) == selected_product
-        ].copy()
+        if view_type == "월별":
 
-        temp = temp.sort_values("년도")
+            temp = monthly_sales_df[
+                monthly_sales_df["상품명"].astype(str).isin(selected_products)
+            ].copy()
 
-        year_list = sorted(temp["년도"].unique().tolist())
+            temp = temp.sort_values(["상품명", "년월"])
 
-        start_year, end_year = st.select_slider(
-            "조회 연도",
-            options=year_list,
-            value=(min(year_list), max(year_list))
-        )
+            min_month = temp["년월"].min()
+            max_month = temp["년월"].max()
 
-        temp = temp[
-            (temp["년도"] >= start_year) &
-            (temp["년도"] <= end_year)
-        ]
+            start_date, end_date = st.date_input(
+                "조회 기간",
+                value=(min_month.date(), max_month.date()),
+                min_value=min_month.date(),
+                max_value=max_month.date()
+            )
 
-        st.line_chart(
-            temp.set_index("년도")["수량"]
-        )
+            temp = temp[
+                (temp["년월"] >= pd.to_datetime(start_date)) &
+                (temp["년월"] <= pd.to_datetime(end_date))
+            ]
 
-        st.dataframe(
-            temp,
-            use_container_width=True
-        )
+            temp["수량표시"] = temp["수량"].round(0).astype(int).astype(str)
+
+            fig = px.line(
+                temp,
+                x="년월",
+                y="수량",
+                color="상품명",
+                markers=True,
+                text="수량표시"
+            )
+
+            fig.update_traces(
+                marker=dict(size=11),
+                textposition="top center",
+                line=dict(width=3)
+            )
+
+            fig.update_layout(
+                height=600,
+                xaxis_title="년월",
+                yaxis_title="판매량",
+                hovermode="x unified",
+                legend_title_text="상품명"
+            )
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
+            st.dataframe(
+                temp,
+                use_container_width=True
+            )
+
+        else:
+
+            temp = annual_sales_df[
+                annual_sales_df["상품명"].astype(str).isin(selected_products)
+            ].copy()
+
+            temp = temp.sort_values(["상품명", "년도"])
+
+            year_list = sorted(temp["년도"].unique().tolist())
+
+            start_year, end_year = st.select_slider(
+                "조회 연도",
+                options=year_list,
+                value=(min(year_list), max(year_list))
+            )
+
+            temp = temp[
+                (temp["년도"] >= start_year) &
+                (temp["년도"] <= end_year)
+            ]
+
+            temp["수량표시"] = temp["수량"].round(0).astype(int).astype(str)
+
+            fig = px.line(
+                temp,
+                x="년도",
+                y="수량",
+                color="상품명",
+                markers=True,
+                text="수량표시"
+            )
+
+            fig.update_traces(
+                marker=dict(size=13),
+                textposition="top center",
+                line=dict(width=4)
+            )
+
+            fig.update_layout(
+                height=600,
+                xaxis_title="년도",
+                yaxis_title="판매량",
+                hovermode="x unified",
+                legend_title_text="상품명"
+            )
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
+            st.dataframe(
+                temp,
+                use_container_width=True
+            )
