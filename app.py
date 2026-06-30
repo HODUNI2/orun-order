@@ -146,45 +146,46 @@ import streamlit as st
 import pandas as pd
 
 st.set_page_config(
-    page_title="오런 재고 소진 대시보드",
+    page_title="오런 재고 소진 대시보드 ver1",
     layout="wide"
 )
 
-BASE_DATE = "2026-04-30"
+BASE_DATE = "2026-06-30"
 
 st.title("오런 재고 소진 대시보드")
 st.caption(f"기준날짜: {BASE_DATE}")
 
+# 데이터 불러오기
 df = pd.read_csv("./data/forecast_dashboard.csv")
 annual_sales_df = pd.read_csv("./data/annual_sales_df.csv")
 monthly_sales_df = pd.read_csv("./data/monthly_sales_df.csv")
 
-# 월별 판매량 정리
+# 판매량 데이터 정리
 monthly_sales_df["년월"] = pd.to_datetime(monthly_sales_df["년월"])
 monthly_sales_df["수량"] = pd.to_numeric(monthly_sales_df["수량"], errors="coerce").fillna(0)
 
-# 연도별 판매량 wide -> long
-annual_sales_long = annual_sales_df.melt(
-    id_vars="상품명",
-    var_name="년도",
-    value_name="수량"
-)
-
-annual_sales_long["년도"] = annual_sales_long["년도"].astype(int)
-annual_sales_long["수량"] = pd.to_numeric(annual_sales_long["수량"], errors="coerce").fillna(0)
+annual_sales_df["년도"] = annual_sales_df["년도"].astype(int)
+annual_sales_df["수량"] = pd.to_numeric(annual_sales_df["수량"], errors="coerce").fillna(0)
 
 tab1, tab2 = st.tabs(["재고 소진 대시보드", "상품별 판매량 추이"])
 
+##############################################################################
+# TAB 1. 재고 소진 대시보드
+##############################################################################
+
 with tab1:
 
+    # 월 컬럼 자동 인식
     month_cols = [
         c for c in df.columns
         if isinstance(c, str) and len(c) == 7 and c[:4].isdigit() and c[4] == "-"
     ]
 
+    # 숫자 변환
     for col in ["현재고"] + month_cols:
         df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
+    # 사이드바
     st.sidebar.header("필터")
 
     supplier_list = ["전체"] + sorted(df["매입처명"].dropna().astype(str).unique().tolist())
@@ -226,6 +227,7 @@ with tab1:
         na_position="last"
     )
 
+    # KPI
     col1, col2, col3, col4 = st.columns(4)
 
     col1.metric("조회 상품 수", f"{len(filtered):,}")
@@ -241,6 +243,7 @@ with tab1:
 
     st.divider()
 
+    # 표시 컬럼
     show_cols = [
         "매입처명",
         "상품명",
@@ -250,6 +253,7 @@ with tab1:
 
     display_df = filtered[show_cols].copy()
 
+    # 음수 스타일
     def negative_style(value):
         try:
             value = float(value)
@@ -280,6 +284,7 @@ with tab1:
         height=750
     )
 
+    # 다운로드
     csv = display_df.to_csv(index=False, encoding="utf-8-sig")
 
     st.download_button(
@@ -288,6 +293,10 @@ with tab1:
         file_name=f"오런_재고소진대시보드_{BASE_DATE}.csv",
         mime="text/csv"
     )
+
+##############################################################################
+# TAB 2. 상품별 판매량 추이
+##############################################################################
 
 with tab2:
 
@@ -329,9 +338,9 @@ with tab2:
             (temp["년월"] <= pd.to_datetime(end_date))
         ]
 
-        chart_df = temp.set_index("년월")["수량"]
-
-        st.line_chart(chart_df)
+        st.line_chart(
+            temp.set_index("년월")["수량"]
+        )
 
         st.dataframe(
             temp,
@@ -340,8 +349,8 @@ with tab2:
 
     else:
 
-        temp = annual_sales_long[
-            annual_sales_long["상품명"].astype(str) == selected_product
+        temp = annual_sales_df[
+            annual_sales_df["상품명"].astype(str) == selected_product
         ].copy()
 
         temp = temp.sort_values("년도")
@@ -359,9 +368,9 @@ with tab2:
             (temp["년도"] <= end_year)
         ]
 
-        chart_df = temp.set_index("년도")["수량"]
-
-        st.line_chart(chart_df)
+        st.line_chart(
+            temp.set_index("년도")["수량"]
+        )
 
         st.dataframe(
             temp,
