@@ -145,6 +145,7 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
+from io import BytesIO
 
 st.set_page_config(
     page_title="오런 재고 소진 대시보드 ver1",
@@ -286,13 +287,16 @@ with tab1:
     )
 
     # 다운로드
-    csv = display_df.to_csv(index=False, encoding="utf-8-sig")
+    output = BytesIO()
+
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        display_df.to_excel(writer, index=False, sheet_name="재고소진")
 
     st.download_button(
-        label="현재 조회 결과 CSV 다운로드",
-        data=csv,
-        file_name=f"오런_재고소진대시보드_{BASE_DATE}.csv",
-        mime="text/csv"
+        label="현재 조회 결과 Excel 다운로드",
+        data=output.getvalue(),
+        file_name=f"오런_재고소진대시보드_{BASE_DATE}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
 ##############################################################################
