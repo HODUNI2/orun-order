@@ -152,7 +152,7 @@ st.set_page_config(
     layout="wide"
 )
 
-BASE_DATE = "2026-06-30"
+BASE_DATE = "2026-07-31"
 
 st.title("오런 재고 소진 대시보드")
 st.caption(f"기준날짜: {BASE_DATE}")
